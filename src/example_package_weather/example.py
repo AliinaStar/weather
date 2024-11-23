@@ -13,6 +13,7 @@ class WeatherDataFetcher:
                 "max_temp", "mean_temp", "min_temp", "precipitation",
                 "pressure", "snow_depth"
             ]
+
             missing_columns = [col for col in required_columns if col not in weather_data.columns]
 
             if missing_columns:
@@ -43,18 +44,15 @@ class WeatherDataPlotter:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
 
-
             grouped = self.data.groupby('decade').agg({
                 'min_temp': 'mean',
                 'mean_temp': 'mean',
                 'max_temp': 'mean'
             }).reset_index()
 
-
             fig, ax = plt.subplots(figsize=(12, 6))
             x = np.arange(len(grouped['decade']))
             bar_width = 0.3
-
 
             colors = {
                 'min_temp': 'blue',
@@ -83,7 +81,6 @@ class WeatherDataPlotter:
                     ax.scatter(
                         [decade], [0], color=color, s=200, edgecolor='black', zorder=3
                     )
-
 
             ax.set_xticks(x)
             ax.set_xticklabels(grouped['decade'])
@@ -149,12 +146,91 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
+    def plot_radiation(self):
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+            
+            grouped = self.data.groupby('decade')
+            decades = list(grouped.groups.keys())
+            num_decades = len(decades)
+            cols = 3
+            rows = (num_decades + cols - 1) // cols
+            
+            fig, axes = plt.subplots(rows, cols, figsize=(15, 5 * rows))
+            axes = axes.flatten()
+            
+            for idx, (decade, group) in enumerate(grouped):
+                axes[idx].scatter(
+                    x=group['global_radiation'],
+                    y=group['mean_temp'],
+                    alpha=0.5,
+                    color='orange'
+                )
+                
+                axes[idx].set_title(f"{decade}s")
+                axes[idx].set_xlabel("Глобальна радіація")
+                axes[idx].set_ylabel("Середня температура")
+                axes[idx].grid(True, linestyle='--', alpha=0.7)
+            
+            for idx in range(num_decades, len(axes)):
+                fig.delaxes(axes[idx])
+            
+            plt.tight_layout()
+            plt.show()
+        except Exception as e:
+            print(f"Помилка: {e}")
+
+    def plot_precipitation(self):
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+            
+            grouped_data = self.data.groupby('decade')['precipitation'].mean().reset_index()
+        
+            fig, ax = plt.subplots(figsize=(12, 6))
+
+            x = grouped_data['decade']
+            y = grouped_data['precipitation']
+            max_value = max(y)
+
+            for i, (x_val, y_val) in enumerate(zip(x, y)):
+                ax.bar(
+                    x=x_val,
+                    height=max_value*1.3,
+                    width=1.5,
+                    color='none',
+                    edgecolor='Black',
+                    linewidth=1.0,
+                    zorder=4
+                )
+                
+                ax.bar(
+                    x=x_val,
+                    height=y_val,  
+                    width=1.5,
+                    color='lightblue',
+                    edgecolor='none',
+                    zorder=3
+                )
+
+            ax.set_title("Середня кількість опадів по десятиліттях")
+            ax.set_xlabel("Десятиліття")
+            ax.set_ylabel("Середня кількість опадів")
+            ax.grid(True, which='major', linestyle='--', alpha=0.6)
+            ax.set_axisbelow(True)
+
+            plt.show()
+        except Exception as e:
+            print(f"Помилка: {e}")
 
 
 fetcher = WeatherDataFetcher()
-df = fetcher._fetch_weather_data(r"D:\weather\src\london_weather.csv")
+df = fetcher._fetch_weather_data(r"E:\projects\Python\PP\src\london_weather.csv")
 
 if not df.empty:
     plotter = WeatherDataPlotter(df)
     plotter.plot_temperature_with_scales()
     plotter.plot_snow_depth_by_decade()
+    plotter.plot_radiation()
+    plotter.plot_precipitation()
