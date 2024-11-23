@@ -223,7 +223,8 @@ class WeatherDataPlotter:
             plt.show()
         except Exception as e:
             print(f"Помилка: {e}")
-     def cloud_cover(self):
+    
+    def cloud_cover(self):
         """
         Візуалізує покриття хмарами для кожного десятиліття у вигляді хмарок з точок.
         """
