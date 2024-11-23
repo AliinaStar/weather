@@ -1,13 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-<<<<<<< HEAD
-
-import numpy as np
-=======
 import seaborn as sns
 import numpy as np
 
->>>>>>> 72cd27adf3be427762efcde9265419b94b5eecf7
 class WeatherDataFetcher:
     def _fetch_weather_data(self, source: str) -> pd.DataFrame:
         try:
@@ -31,8 +26,6 @@ class WeatherDataFetcher:
 class WeatherDataPlotter:
     def __init__(self, data: pd.DataFrame):
         self.data = data
-<<<<<<< HEAD
-=======
         self._prepare_data()
 
     def _prepare_data(self):
@@ -44,7 +37,6 @@ class WeatherDataPlotter:
             self.data['decade'] = (self.data['date'].dt.year // 10) * 10
         except Exception as e:
             print(f"Помилка під час підготовки даних: {e}")
->>>>>>> 72cd27adf3be427762efcde9265419b94b5eecf7
 
     def plot_temperature_with_scales(self):
         try:
@@ -52,13 +44,6 @@ class WeatherDataPlotter:
                 raise ValueError("Датасет порожній.")
 
 
-<<<<<<< HEAD
-            self.data['date'] = pd.to_datetime(self.data['date'], format='%Y%m%d', errors='coerce')
-            self.data['decade'] = (self.data['date'].dt.year // 10) * 10
-
-
-=======
->>>>>>> 72cd27adf3be427762efcde9265419b94b5eecf7
             grouped = self.data.groupby('decade').agg({
                 'min_temp': 'mean',
                 'mean_temp': 'mean',
@@ -113,8 +98,6 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-<<<<<<< HEAD
-=======
     def plot_snow_depth_by_decade(self):
         """
         Побудова окремих графіків висоти снігу для кожного десятиліття.
@@ -167,7 +150,6 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
 
 
->>>>>>> 72cd27adf3be427762efcde9265419b94b5eecf7
 
 fetcher = WeatherDataFetcher()
 df = fetcher._fetch_weather_data(r"D:\weather\src\london_weather.csv")
@@ -175,7 +157,4 @@ df = fetcher._fetch_weather_data(r"D:\weather\src\london_weather.csv")
 if not df.empty:
     plotter = WeatherDataPlotter(df)
     plotter.plot_temperature_with_scales()
-<<<<<<< HEAD
-=======
     plotter.plot_snow_depth_by_decade()
->>>>>>> 72cd27adf3be427762efcde9265419b94b5eecf7
