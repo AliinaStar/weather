@@ -223,6 +223,53 @@ class WeatherDataPlotter:
             plt.show()
         except Exception as e:
             print(f"Помилка: {e}")
+     def cloud_cover(self):
+        """
+        Візуалізує покриття хмарами для кожного десятиліття у вигляді хмарок з точок.
+        """
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+            
+            if 'cloud_cover' not in self.data.columns or self.data['cloud_cover'].dropna().empty:
+                raise ValueError("Немає даних про покриття хмарами.")
+
+            grouped_data = self.data.groupby('decade')['cloud_cover'].apply(list)
+            
+            decades = grouped_data.index
+            num_decades = len(decades)
+            cols = 3  
+            rows = (num_decades + cols - 1) // cols  
+
+            fig, axes = plt.subplots(rows, cols, figsize=(15, 5 * rows), constrained_layout=True)
+            axes = axes.flatten() 
+
+            for idx, (decade, cloud_values) in enumerate(grouped_data.items()):
+
+                np.random.seed(42 + idx) 
+                x = np.random.normal(loc=50, scale=15, size=len(cloud_values))
+                y = np.random.normal(loc=50, scale=10, size=len(cloud_values))
+                sizes = np.array(cloud_values) * 5
+
+
+                axes[idx].scatter(x, y, s=sizes, alpha=0.5, color='lightblue', edgecolor='blue' )
+                axes[idx].set_title(f"{decade}s", fontsize=14)
+                axes[idx].set_xlim(0, 100)
+                axes[idx].set_ylim(0, 100)
+                axes[idx].set_xlabel("Ширина розташування(придумати шось нормальне)", fontsize=12)
+                axes[idx].set_ylabel("Висота розташування(придумати шось нормальне)", fontsize=12)
+                axes[idx].grid(True, linestyle='--', alpha=0.7)
+
+
+            for idx in range(num_decades, len(axes)):
+                fig.delaxes(axes[idx])
+
+            fig.suptitle("Покриття хмарами для кожного десятиліття", fontsize=16, y=1.02)
+            plt.show()
+
+        except Exception as e:
+            print(f"Помилка: {e}")
+
 
 
 fetcher = WeatherDataFetcher()
@@ -234,3 +281,4 @@ if not df.empty:
     plotter.plot_snow_depth_by_decade()
     plotter.plot_radiation()
     plotter.plot_precipitation()
+    plotter.cloud_cover()
