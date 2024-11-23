@@ -223,6 +223,8 @@ class WeatherDataPlotter:
             plt.show()
         except Exception as e:
             print(f"Помилка: {e}")
+     
+     
      def cloud_cover(self):
         """
         Візуалізує покриття хмарами для кожного десятиліття у вигляді хмарок з точок.
@@ -269,6 +271,59 @@ class WeatherDataPlotter:
 
         except Exception as e:
             print(f"Помилка: {e}")
+
+     
+     def weather_report(self):
+        """
+        Створює комплексний текстовий звіт про погоду
+        """
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+    
+            total_records = len(self.data)
+            date_range = (self.data['date'].min(), self.data['date'].max())
+            print(colored("\nЗагальна інформація:", "green"))
+            print(f"- Кількість записів: {total_records}")
+            print(f"- Період даних: {date_range[0].date()} — {date_range[1].date()}")
+            
+            avg_sunshine = self.data['sunshine'].mean()
+            max_sunshine = self.data['sunshine'].max()
+            sunniest_day = self.data.loc[self.data['sunshine'].idxmax(), 'date']
+    
+            print(colored(f"\nСередній сонячний світловий день: {avg_sunshine:.2f} годин/день"))
+            print(f"Найсонячніший день: {sunniest_day.date()} ({max_sunshine:.2f} годин)\n")
+    
+            mean_temp = self.data['mean_temp'].mean()
+            max_temp = self.data['max_temp'].max()
+            min_temp = self.data['min_temp'].min()
+            hottest_day = self.data.loc[self.data['max_temp'].idxmax(), 'date']
+            coldest_day = self.data.loc[self.data['min_temp'].idxmin(), 'date']
+    
+            temp_data = [
+                ["Середня температура (°C)", f"{mean_temp:.2f}"],
+                ["Максимальна температура (°C)", f"{max_temp:.2f} (Дата: {hottest_day.date()})"],
+                ["Мінімальна температура (°C)", f"{min_temp:.2f} (Дата: {coldest_day.date()})"]
+            ]
+            print(colored("Температура:", "blue"))
+            print(tabulate(temp_data, headers=["Метрика", "Значення"], tablefmt="fancy_grid"))
+            print()
+    
+            total_precipitation = self.data['precipitation'].sum()
+            avg_precipitation = self.data['precipitation'].mean()
+            max_precipitation_day = self.data.loc[self.data['precipitation'].idxmax(), 'date']
+
+            precipitation_data = [
+                ["Загальна кількість опадів (мм)", f"{total_precipitation:.2f}"],
+                ["Середньодобова кількість опадів (мм)", f"{avg_precipitation:.2f}"],
+                ["Найбільше опадів (мм)", f"{max_precipitation_day.date()}"]
+            ]
+            print(colored("Опади:", "blue"))
+            print(tabulate(precipitation_data, headers=["Метрика", "Значення"], tablefmt="fancy_grid"))
+            print()
+            
+        except Exception as e:
+            print(colored(f"Помилка при створенні звіту: {e}", "red"))
 
 
 
