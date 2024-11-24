@@ -272,7 +272,133 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-     
+      def sunshine(self):
+        """
+        Візуалізує кількість сонця для кожного десятиліття у формі сонця.
+        Один промінь = один рік, довжина і колір залежать від кількості сонця.
+        """
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+    
+            if 'decade' not in self.data.columns or 'sunshine' not in self.data.columns or 'date' not in self.data.columns:
+                raise ValueError("Дані повинні містити колонки 'decade', 'sunshine' і 'date'.")
+    
+            self.data['year'] = self.data['date'].dt.year
+            grouped_data = self.data.groupby(['decade', 'year'])['sunshine'].sum().reset_index()
+    
+            decades = grouped_data['decade'].unique()
+    
+            cols = 3 
+            rows = (len(decades) + cols - 1) // cols 
+            fig, axes = plt.subplots(rows, cols, figsize=(5 * cols, 5 * rows), constrained_layout=True)
+        
+            axes = axes.flatten() if isinstance(axes, np.ndarray) else [axes]
+    
+            for idx, decade in enumerate(decades):
+                decade_data = grouped_data[grouped_data['decade'] == decade]
+                years = decade_data['year']
+                sunshine_values = decade_data['sunshine']
+    
+                norm = plt.Normalize(vmin=sunshine_values.min(), vmax=sunshine_values.max())
+                cmap = plt.cm.YlOrRd  
+                colors = cmap(norm(sunshine_values))
+    
+                ax = axes[idx]
+                ax.set_aspect('equal')
+                num_years = len(years)
+                angles = np.linspace(0, 2 * np.pi, num_years, endpoint=False)  # Кути для променів
+    
+                for angle, sun_value, year, color in zip(angles, sunshine_values, years, colors):
+                    x = np.cos(angle) * sun_value  # X-координата кінця променя
+                    y = np.sin(angle) * sun_value  # Y-координата кінця променя
+    
+                    ax.plot([0, x], [0, y], color=color, lw=2, alpha=0.8)
+    
+                    ax.text(x * 1.1, y * 1.1, str(year), fontsize=8, ha='center', va='center')
+    
+                ax.scatter(0, 0, s=500, color='yellow', zorder=4)
+    
+                ax.set_xlim(-sunshine_values.max() * 1.2, sunshine_values.max() * 1.2)
+                ax.set_ylim(-sunshine_values.max() * 1.2, sunshine_values.max() * 1.2)
+                ax.set_title(f"{decade}s", fontsize=12)
+                ax.axis('off') 
+    
+            for idx in range(len(decades), len(axes)):
+                fig.delaxes(axes[idx])
+
+            
+            fig.suptitle("Сонячна активність за десятиліттями", fontsize=16, y=1.02)
+
+            sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+            sm.set_array([])
+            fig.colorbar(sm, ax=axes, orientation='vertical', fraction=0.02, pad=0.05, label="Сонячні години")
+    
+            plt.show()
+        except Exception as e:
+            print(f"Помилка: {e}")
+
+    def sunshine_year(self, year):
+        """
+        Візуалізує кількість сонця для конкретного року у формі сонця.
+        Один промінь = один день, довжина і колір залежать від кількості сонця.
+        """
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+
+            if 'sunshine' not in self.data.columns or 'date' not in self.data.columns:
+                raise ValueError("Дані повинні містити колонки 'sunshine' і 'date'.")
+
+            self.data['year'] = self.data['date'].dt.year
+            year_data = self.data[self.data['year'] == year]
+
+            if year_data.empty:
+                raise ValueError(f"Немає даних для року {year}.")
+
+            year_data = year_data.sort_values(by='date')
+            days = year_data['date'].dt.day_of_year
+            sunshine_values = year_data['sunshine']
+
+            norm = plt.Normalize(vmin=sunshine_values.min(), vmax=sunshine_values.max())
+            cmap = plt.cm.YlOrRd  # Жовто-червоний градієнт
+            colors = cmap(norm(sunshine_values))
+
+            fig, ax = plt.subplots(figsize=(8, 8))
+            ax.set_aspect('equal')
+
+            num_days = len(days)
+            angles = np.linspace(0, 2 * np.pi, num_days, endpoint=False)  # Кути для променів
+
+            for angle, sun_value, day_of_year, color in zip(angles, sunshine_values, days, colors):
+                x = np.cos(angle) * sun_value  # X-координата кінця променя
+                y = np.sin(angle) * sun_value  # Y-координата кінця променя
+
+
+                ax.plot([0, x], [0, y], color=color, lw=0.7, alpha=0.8)
+
+                if day_of_year % 30 == 0:  
+                    ax.text(
+                        x * 1.1, y * 1.1,
+                        str(day_of_year), fontsize=6, ha='center', va='center',
+                        bbox=dict(boxstyle="round,pad=0.2", fc="white", edgecolor="gray", alpha=0.8)
+                    )
+
+            ax.scatter(0, 0, s=500, color='gold', zorder=3)
+
+            ax.set_xlim(-sunshine_values.max() * 1.2, sunshine_values.max() * 1.2)
+            ax.set_ylim(-sunshine_values.max() * 1.2, sunshine_values.max() * 1.2)
+            ax.set_title(f"Сонячна активність за {year} рік", fontsize=12, fontweight='regular')
+            ax.axis('off')  # Прибираємо осі
+
+            sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+            sm.set_array([])
+            fig.colorbar(sm, ax=ax, orientation='vertical', fraction=0.02, pad=0.05, label="Сонячні години")
+
+            plt.show()
+        except Exception as e:
+            print(f"Помилка: {e}")
+
      def weather_report(self):
         """
         Створює комплексний текстовий звіт про погоду
@@ -337,3 +463,6 @@ if not df.empty:
     plotter.plot_radiation()
     plotter.plot_precipitation()
     plotter.cloud_cover()
+    plotter.sunshine()
+    plotter.sunshine_year()
+    plotter.weather_report()
