@@ -4,22 +4,40 @@ import seaborn as sns
 import numpy as np
 
 class WeatherDataFetcher:
+    def __init__(self, required_columns: list[str] = None, date_column: str = "date", date_format: str = "%Y%m%d"):
+        """
+        Ініціалізує клас DataFetcher.
+
+        :param required_columns: Список необхідних колонок (може бути None, якщо валідація не потрібна).
+        :param date_column: Назва колонки з датою (якщо є).
+        :param date_format: Формат дати для перевірки (якщо є колонка з датою).
+        """
+        self.required_columns = required_columns or []
+        self.date_column = date_column
+        self.date_format = date_format
     def _fetch_weather_data(self, source: str) -> pd.DataFrame:
+        """
+               Завантажує дані з файлу та виконує перевірки.
+
+               :param source: Шлях до CSV-файлу.
+               :return: DataFrame з даними.
+               """
         try:
-            weather_data = pd.read_csv(source)
+            data = pd.read_csv(source)
 
-            required_columns = [
-                "date", "cloud_cover", "sunshine", "global_radiation",
-                "max_temp", "mean_temp", "min_temp", "precipitation",
-                "pressure", "snow_depth"
-            ]
 
-            missing_columns = [col for col in required_columns if col not in weather_data.columns]
+            if self.required_columns:
+                missing_columns = [col for col in self.required_columns if col not in data.columns]
+                if missing_columns:
+                    raise ValueError(f"Відсутні необхідні колонки: {', '.join(missing_columns)}")
 
-            if missing_columns:
-                raise ValueError(f"Відсутні необхідні колонки: {', '.join(missing_columns)}")
 
-            return weather_data
+            if self.date_column in data.columns:
+                data[self.date_column] = pd.to_datetime(data[self.date_column], format=self.date_format,
+                                                        errors='coerce')
+                if data[self.date_column].isna().any():
+                    raise ValueError(f"Некоректний формат дати в колонці '{self.date_column}'.")
+            return data
         except Exception as e:
             print(f"Помилка: {e}")
         return pd.DataFrame()
@@ -30,9 +48,6 @@ class WeatherDataPlotter:
         self._prepare_data()
 
     def _prepare_data(self):
-        """
-        Готує дані, додаючи колонку 'decade'.
-        """
         try:
             self.data['date'] = pd.to_datetime(self.data['date'], format='%Y%m%d', errors='coerce')
             self.data['decade'] = (self.data['date'].dt.year // 10) * 10
@@ -44,15 +59,18 @@ class WeatherDataPlotter:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
 
+
             grouped = self.data.groupby('decade').agg({
                 'min_temp': 'mean',
                 'mean_temp': 'mean',
                 'max_temp': 'mean'
             }).reset_index()
 
+
             fig, ax = plt.subplots(figsize=(12, 6))
             x = np.arange(len(grouped['decade']))
             bar_width = 0.3
+
 
             colors = {
                 'min_temp': 'blue',
@@ -82,6 +100,7 @@ class WeatherDataPlotter:
                         [decade], [0], color=color, s=200, edgecolor='black', zorder=3
                     )
 
+
             ax.set_xticks(x)
             ax.set_xticklabels(grouped['decade'])
             ax.set_xlabel("Десятиліття")
@@ -96,9 +115,6 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
 
     def plot_snow_depth_by_decade(self):
-        """
-        Побудова окремих графіків висоти снігу для кожного десятиліття.
-        """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
@@ -150,16 +166,16 @@ class WeatherDataPlotter:
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
-            
+
             grouped = self.data.groupby('decade')
             decades = list(grouped.groups.keys())
             num_decades = len(decades)
             cols = 3
             rows = (num_decades + cols - 1) // cols
-            
+
             fig, axes = plt.subplots(rows, cols, figsize=(15, 5 * rows))
             axes = axes.flatten()
-            
+
             for idx, (decade, group) in enumerate(grouped):
                 axes[idx].scatter(
                     x=group['global_radiation'],
@@ -167,15 +183,15 @@ class WeatherDataPlotter:
                     alpha=0.5,
                     color='orange'
                 )
-                
+
                 axes[idx].set_title(f"{decade}s")
                 axes[idx].set_xlabel("Глобальна радіація")
                 axes[idx].set_ylabel("Середня температура")
                 axes[idx].grid(True, linestyle='--', alpha=0.7)
-            
+
             for idx in range(num_decades, len(axes)):
                 fig.delaxes(axes[idx])
-            
+
             plt.tight_layout()
             plt.show()
         except Exception as e:
@@ -185,41 +201,37 @@ class WeatherDataPlotter:
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
-            
-            grouped_data = self.data.groupby('decade')['precipitation'].mean().reset_index()
-        
-            fig, ax = plt.subplots(figsize=(12, 6))
 
+            grouped_data = self.data.groupby('decade')['precipitation'].mean().reset_index()
+
+            fig, ax = plt.subplots(figsize=(12, 6))
             x = grouped_data['decade']
             y = grouped_data['precipitation']
             max_value = max(y)
-
             for i, (x_val, y_val) in enumerate(zip(x, y)):
                 ax.bar(
                     x=x_val,
-                    height=max_value*1.3,
+                    height=max_value * 1.3,
                     width=1.5,
                     color='none',
                     edgecolor='Black',
                     linewidth=1.0,
                     zorder=4
                 )
-                
+
                 ax.bar(
                     x=x_val,
-                    height=y_val,  
+                    height=y_val,
                     width=1.5,
                     color='lightblue',
                     edgecolor='none',
                     zorder=3
                 )
-
             ax.set_title("Середня кількість опадів по десятиліттях")
             ax.set_xlabel("Десятиліття")
             ax.set_ylabel("Середня кількість опадів")
             ax.grid(True, which='major', linestyle='--', alpha=0.6)
             ax.set_axisbelow(True)
-
             plt.show()
         except Exception as e:
             print(f"Помилка: {e}")
@@ -458,6 +470,7 @@ df = fetcher._fetch_weather_data(r"E:\projects\Python\PP\src\london_weather.csv"
 
 if not df.empty:
     plotter = WeatherDataPlotter(df)
+    print("Дані успішно завантажені!")
     plotter.plot_temperature_with_scales()
     plotter.plot_snow_depth_by_decade()
     plotter.plot_radiation()
