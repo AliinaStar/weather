@@ -7,10 +7,28 @@ from tabulate import tabulate
 from scipy.signal import savgol_filter
 
 class WeatherDataPlotter:
-    def __init__(self, data: pd.DataFrame):
-        self.data = data
+    def __init__(self, data: pd.DataFrame, date_col: str, date_format: str = '%Y%m%d'):
+        """
+        Ініціалізує клас WeatherDataPlotter.
 
-    def plot_temperature_with_scales(self, min_col, mean_col, max_col, date_col):
+        :param data: DataFrame з погодними даними.
+        :param date_col: Назва колонки з датами.
+        :param date_format: Формат дат у колонці (за замовчуванням '%Y%m%d').
+        """
+        self.data = data.copy()
+        self.date_col = date_col
+        self.date_format = date_format
+
+        if date_col not in self.data.columns:
+            raise ValueError(f"Колонка з датами '{date_col}' відсутня у датасеті.")
+
+        self.data[date_col] = pd.to_datetime(self.data[date_col], format=self.date_format, errors='coerce')
+        if self.data[date_col].isna().all():
+            raise ValueError(f"Усі значення у колонці '{date_col}' некоректні для формату '{date_format}'.")
+
+        self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
+
+    def plot_temperature_with_scales(self, min_col, mean_col, max_col):
         """
         Creates a specialized temperature visualization with thermometer-like scales by decades.
 
@@ -21,8 +39,6 @@ class WeatherDataPlotter:
         :raises ValueError: If the dataset is empty
         """
         try:
-            self.data[date_col] = pd.to_datetime(self.data[date_col], format='%Y%m%d', errors='coerce')
-            self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
 
             if any(col not in self.data.columns for col in [min_col, mean_col, max_col]):
                 raise ValueError(f"Однієї або декількох необхідних колонок немає: {min_col}, {mean_col}, {max_col}")
@@ -81,7 +97,7 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-    def plot_snow_depth(self, snow_depth, date_col):
+    def plot_snow_depth(self, snow_depth):
         """
         Creates density plots of snow depth distribution for each decade.
 
@@ -92,8 +108,6 @@ class WeatherDataPlotter:
         :raises ValueError: If the dataset is empty or snow depth data is missing
         """
         try:
-            self.data[date_col] = pd.to_datetime(self.data[date_col], format='%Y%m%d', errors='coerce')
-            self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
 
             if snow_depth not in self.data.columns or self.data[snow_depth].dropna().empty:
                 raise ValueError(f"Колонка '{snow_depth}' відсутня або пуста.")
@@ -136,7 +150,7 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-    def plot_radiation(self, radiation_col, temp_col, date_col):
+    def plot_radiation(self, radiation_col, temp_col):
         """
         Creates scatter plots with regression lines showing relationship between global radiation and mean temperature by decades.
 
@@ -150,11 +164,8 @@ class WeatherDataPlotter:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
             
-            if any(col not in self.data.columns for col in [radiation_col, temp_col, date_col]):
-                raise ValueError(f"Однієї або декількох колонок немає: {radiation_col}, {temp_col}, {date_col}")
-
-            self.data[date_col] = pd.to_datetime(self.data[date_col], errors='coerce')
-            self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
+            if any(col not in self.data.columns for col in [radiation_col, temp_col]):
+                raise ValueError(f"Однієї або декількох колонок немає: {radiation_col}, {temp_col}")
 
             grouped = self.data.groupby('decade')
             decades = list(grouped.groups.keys())
@@ -195,7 +206,7 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-    def plot_precipitation(self, precipitation_col, date_col):
+    def plot_precipitation(self, precipitation_col):
         """
             Visualizes average precipitation by decades using special bar chart with empty frame containers.
             
@@ -209,12 +220,9 @@ class WeatherDataPlotter:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
             
-            if precipitation_col not in self.data.columns or date_col not in self.data.columns:
-                raise ValueError(f"Однієї або обох колонок немає: {precipitation_col}, {date_col}")
+            if precipitation_col not in self.data.columns not in self.data.columns:
+                raise ValueError(f"Однієї або обох колонок немає: {precipitation_col}")
             
-            self.data[date_col] = pd.to_datetime(self.data[date_col], errors='coerce')
-            self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
-
             grouped_data = self.data.groupby('decade')[precipitation_col].mean().reset_index()
 
             fig, ax = plt.subplots(figsize=(12, 6))
@@ -250,7 +258,7 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
      
      
-    def plot_cloud_cover(self, cloud_cover_col, date_col):
+    def plot_cloud_cover(self, cloud_cover_col):
         """
             Visualizes cloud cover for each decade using dot-based cloud representations.
             
@@ -264,11 +272,8 @@ class WeatherDataPlotter:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
             
-            if cloud_cover_col not in self.data.columns or date_col not in self.data.columns:
-                raise ValueError(f"Однієї або обох колонок немає: {cloud_cover_col}, {date_col}")
-            
-            self.data[date_col] = pd.to_datetime(self.data[date_col], errors='coerce')
-            self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
+            if cloud_cover_col not in self.data.columns not in self.data.columns:
+                raise ValueError(f"Однієї або обох колонок немає: {cloud_cover_col}")
 
             grouped_data = self.data.groupby('decade')[cloud_cover_col].apply(list)
             
@@ -323,8 +328,6 @@ class WeatherDataPlotter:
             if any(col not in self.data.columns for col in [sunshine_col, date_col]):
                 raise ValueError(f"Однієї або обох колонок немає: {sunshine_col}, {date_col}")
     
-            self.data[date_col] = pd.to_datetime(self.data[date_col], errors='coerce')
-            self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
             self.data['year'] = self.data[date_col].dt.year
             grouped_data = self.data.groupby(['decade', 'year'])[sunshine_col].sum().reset_index()
     
@@ -510,7 +513,7 @@ class WeatherDataPlotter:
         except Exception as e:
             print(colored(f"Помилка при створенні звіту: {e}", "red"))
 
-    def plot_pressure(self, pressure_col, date_col):
+    def plot_pressure(self, pressure_col):
         """
         Plots the average pressure over time for each decade.
 
@@ -525,13 +528,10 @@ class WeatherDataPlotter:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
             
-            if any(col not in self.data.columns for col in [pressure_col, date_col]):
-                raise ValueError(f"Однієї або обох колонок немає: {pressure_col}, {date_col}")
+            if any(col not in self.data.columns for col in [pressure_col]):
+                raise ValueError(f"Однієї або обох колонок немає: {pressure_col}")
 
-            self.data[date_col] = pd.to_datetime(self.data[date_col], errors='coerce')
-            self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
-
-            grouped_data = self.data.groupby(['decade', date_col])[pressure_col].mean().reset_index()
+            grouped_data = self.data.groupby(['decade'])[pressure_col].mean().reset_index()
             decades = grouped_data['decade'].unique()
             num_decades = len(decades)
 
@@ -577,25 +577,23 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
 
 
-"""data = pd.read_csv(r"E:\projects\Python\PP\src\london_weather.csv")
+data = pd.read_csv(r"E:\projects\Python\PP\src\london_weather.csv")
 
-plotter = WeatherDataPlotter(data)
+plotter = WeatherDataPlotter(data, 'date')
 
 plotter.plot_temperature_with_scales(
     "min_temp",
     "mean_temp",
     "max_temp",
-    "date"
 )
-
-plotter.plot_snow_depth("snow_depth", "date")
-plotter.plot_radiation("global_radiation", "meam_temp", "date")
-plotter.plot_precipitation("precipitation","date")
-plotter.plot_cloud_cover("cloud_cover","date")
-plotter.plot_pressure("pressure","date")
+plotter.plot_snow_depth("snow_depth")
+plotter.plot_radiation("global_radiation", "mean_temp")
+plotter.plot_precipitation("precipitation")
+plotter.plot_cloud_cover("cloud_cover")
+plotter.plot_pressure("pressure")
 plotter.plot_sunshine("sunshine","date")
 plotter.plot_sunshine_year(2005, "sunshine", "date")
-plotter.weather_report("date", "sunshine", "mean_temp", "precipitation")"""
+plotter.weather_report("date", "sunshine", "mean_temp", "precipitation")
 
 '''data = pd.read_csv(r"E:\projects\Python\PP\tests\seattle-weather.csv")
 
