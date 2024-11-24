@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "weather_visualization"
+version = "0.1.0"
+authors = [
+  { name="Alina Starchenko", email="alinastarrr1@gmail.com" },
+  { name="Alla Kuzko", email="alla10092016@gmail.com"},
+  { name="Oksana Mokra", email="oksanamokra8@gmail.com"},
+]
+description = "Бібліотека для візуалізації погодних умов"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "pandas",
+    "matplotlib",
+    "seaborn",
+    "numpy"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/AliinaStar/weather.git"
