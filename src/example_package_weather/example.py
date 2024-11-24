@@ -172,7 +172,7 @@ class WeatherDataPlotter:
 required_columns = [
     "date", "cloud_cover", "sunshine", "global_radiation",
     "max_temp", "mean_temp", "min_temp", "precipitation",
-    "pressure", "snow_depth"
+    "pressure", "snow_depth" 
 ]
 fetcher = WeatherDataFetcher(required_columns=required_columns, date_column="date", date_format="%Y%m%d")
 df = fetcher._fetch_weather_data(r"D:\weather\src\london_weather.csv")
