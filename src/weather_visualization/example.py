@@ -6,27 +6,42 @@ from termcolor import colored
 from tabulate import tabulate
 from scipy.signal import savgol_filter
 
+
 class WeatherDataPlotter:
-    def __init__(self, data: pd.DataFrame, date_col: str, date_format: str = '%Y%m%d'):
+    def __init__(self, data: pd.DataFrame, date_col: str):
         """
         Ініціалізує клас WeatherDataPlotter.
 
         :param data: DataFrame з погодними даними.
         :param date_col: Назва колонки з датами.
-        :param date_format: Формат дат у колонці (за замовчуванням '%Y%m%d').
         """
         self.data = data.copy()
         self.date_col = date_col
-        self.date_format = date_format
 
+        # Перевірка наявності колонки
         if date_col not in self.data.columns:
             raise ValueError(f"Колонка з датами '{date_col}' відсутня у датасеті.")
 
-        self.data[date_col] = pd.to_datetime(self.data[date_col], format=self.date_format, errors='coerce')
-        if self.data[date_col].isna().all():
-            raise ValueError(f"Усі значення у колонці '{date_col}' некоректні для формату '{date_format}'.")
+        # Спроба визначити формат дати
+        try:
+            # Якщо дати вже у форматі YYYYMMDD
+            if pd.to_datetime(self.data[date_col], format='%Y%m%d', errors='coerce').notna().all():
+                self.data[date_col] = pd.to_datetime(self.data[date_col], format='%Y%m%d')
+            # Якщо дати у форматі YYYY-MM-DD
+            elif pd.to_datetime(self.data[date_col], format='%Y-%m-%d', errors='coerce').notna().all():
+                self.data[date_col] = pd.to_datetime(self.data[date_col], format='%Y-%m-%d')
+            else:
+                raise ValueError("Формат дати у колонці невідомий.")
+        except Exception as e:
+            raise ValueError(f"Помилка під час конвертації дат: {e}")
 
+        # Додавання десятиліття
         self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
+
+        # Перетворення дат у формат YYYYMMDD
+        self.data[date_col] = self.data[date_col].dt.strftime('%Y%m%d')
+
+
 
     def plot_temperature_with_scales(self, min_col, mean_col, max_col):
         """
