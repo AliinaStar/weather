@@ -2,6 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from termcolor import colored
+from tabulate import tabulate
+from scipy.signal import savgol_filter
 
 class WeatherDataFetcher:
     def _fetch_weather_data(self, source: str) -> pd.DataFrame:
@@ -165,7 +168,16 @@ class WeatherDataPlotter:
                     x=group['global_radiation'],
                     y=group['mean_temp'],
                     alpha=0.5,
-                    color='orange'
+                    color='lightgreen'
+                )
+
+                sns.regplot(
+                    data=group,
+                    x='global_radiation',
+                    y='mean_temp',
+                    ax=axes[idx], 
+                    color='green',
+                    scatter=False
                 )
                 
                 axes[idx].set_title(f"{decade}s")
@@ -225,7 +237,7 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
      
      
-     def cloud_cover(self):
+    def cloud_cover(self):
         """
         Візуалізує покриття хмарами для кожного десятиліття у вигляді хмарок з точок.
         """
@@ -273,7 +285,7 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
 
      
-     def weather_report(self):
+    def weather_report(self):
         """
         Створює комплексний текстовий звіт про погоду
         """
@@ -325,6 +337,56 @@ class WeatherDataPlotter:
         except Exception as e:
             print(colored(f"Помилка при створенні звіту: {e}", "red"))
 
+    def cloud_pressure_plot(self):
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+
+            grouped_data = self.data.groupby(['decade', 'date'])['pressure'].mean().reset_index()
+            decades = grouped_data['decade'].unique()
+            num_decades = len(decades)
+
+            cols = 3
+            rows = (num_decades + cols - 1) // cols
+
+            fig, axes = plt.subplots(rows, cols, figsize=(15, 5 * rows), constrained_layout=True)
+            axes = axes.flatten()
+
+            for i, decade in enumerate(decades):
+                decade_data = grouped_data[grouped_data['decade'] == decade]
+
+                ax = axes[i]
+                y_pressure = decade_data['pressure'].to_numpy()
+                dates = decade_data['date']
+
+                ax.plot(
+                    dates,
+                    y_pressure,
+                    color='lightblue',
+                    linewidth=2,
+                )
+
+                if len(y_pressure) > 5:
+                    p = np.polyfit(range(len(dates)), y_pressure, deg=5)
+                    y_poly = np.polyval(p, range(len(dates)))
+                    ax.plot(
+                        dates,
+                        y_poly,
+                        color='blue',
+                    )
+
+                ax.set_title(f"Середній тиск: {decade}s", fontsize=14)
+                ax.set_xlabel("Дата")
+                ax.set_ylabel("Середній тиск")
+                ax.grid(True, linestyle='--', alpha=0.5)
+
+            fig.suptitle("Середній тиск по датах для кожного десятиліття", fontsize=16)
+
+            plt.show()
+
+        except Exception as e:
+            print(f"Помилка: {e}")
+
 
 
 fetcher = WeatherDataFetcher()
@@ -337,3 +399,6 @@ if not df.empty:
     plotter.plot_radiation()
     plotter.plot_precipitation()
     plotter.cloud_cover()
+    plotter.cloud_pressure_plot()
+    plotter.weather_report()
+
