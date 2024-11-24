@@ -573,7 +573,7 @@ plotter.plot_temperature_with_scales(
 )
 
 plotter.plot_snow_depth("snow_depth", "date")
-plotter.plot_radiation("global_radiation", "meam_temp", "date")
+plotter.plot_radiation("global_radiation", "mean_temp", "date")
 plotter.plot_precipitation("precipitation","date")
 plotter.plot_cloud_cover("cloud_cover","date")
 plotter.plot_pressure("pressure","date")
