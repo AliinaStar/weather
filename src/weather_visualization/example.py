@@ -351,11 +351,11 @@ class WeatherDataPlotter:
                 ax = axes[idx]
                 ax.set_aspect('equal')
                 num_years = len(years)
-                angles = np.linspace(0, 2 * np.pi, num_years, endpoint=False)  # Кути для променів
+                angles = np.linspace(0, 2 * np.pi, num_years, endpoint=False)  
     
                 for angle, sun_value, year, color in zip(angles, sunshine_values, years, colors):
-                    x = np.cos(angle) * sun_value  # X-координата кінця променя
-                    y = np.sin(angle) * sun_value  # Y-координата кінця променя
+                    x = np.cos(angle) * sun_value  
+                    y = np.sin(angle) * sun_value  
     
                     ax.plot([0, x], [0, y], color=color, lw=2, alpha=0.8)
     
@@ -513,7 +513,7 @@ class WeatherDataPlotter:
         except Exception as e:
             print(colored(f"Помилка при створенні звіту: {e}", "red"))
 
-    def plot_pressure(self, pressure_col):
+    def plot_pressure(self, pressure_col, date_col):
         """
         Plots the average pressure over time for each decade.
 
