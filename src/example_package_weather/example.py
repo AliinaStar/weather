@@ -168,11 +168,85 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
+    def plot_radiation(self):
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+
+            grouped = self.data.groupby('decade')
+            decades = list(grouped.groups.keys())
+            num_decades = len(decades)
+            cols = 3
+            rows = (num_decades + cols - 1) // cols
+
+            fig, axes = plt.subplots(rows, cols, figsize=(15, 5 * rows))
+            axes = axes.flatten()
+
+            for idx, (decade, group) in enumerate(grouped):
+                axes[idx].scatter(
+                    x=group['global_radiation'],
+                    y=group['mean_temp'],
+                    alpha=0.5,
+                    color='orange'
+                )
+
+                axes[idx].set_title(f"{decade}s")
+                axes[idx].set_xlabel("Глобальна радіація")
+                axes[idx].set_ylabel("Середня температура")
+                axes[idx].grid(True, linestyle='--', alpha=0.7)
+
+            for idx in range(num_decades, len(axes)):
+                fig.delaxes(axes[idx])
+
+            plt.tight_layout()
+            plt.show()
+        except Exception as e:
+            print(f"Помилка: {e}")
+
+    def plot_precipitation(self):
+        try:
+            if self.data.empty:
+                raise ValueError("Датасет порожній.")
+
+            grouped_data = self.data.groupby('decade')['precipitation'].mean().reset_index()
+
+            fig, ax = plt.subplots(figsize=(12, 6))
+            x = grouped_data['decade']
+            y = grouped_data['precipitation']
+            max_value = max(y)
+            for i, (x_val, y_val) in enumerate(zip(x, y)):
+                ax.bar(
+                    x=x_val,
+                    height=max_value * 1.3,
+                    width=1.5,
+                    color='none',
+                    edgecolor='Black',
+                    linewidth=1.0,
+                    zorder=4
+                )
+
+                ax.bar(
+                    x=x_val,
+                    height=y_val,
+                    width=1.5,
+                    color='lightblue',
+                    edgecolor='none',
+                    zorder=3
+                )
+            ax.set_title("Середня кількість опадів по десятиліттях")
+            ax.set_xlabel("Десятиліття")
+            ax.set_ylabel("Середня кількість опадів")
+            ax.grid(True, which='major', linestyle='--', alpha=0.6)
+            ax.set_axisbelow(True)
+            plt.show()
+        except Exception as e:
+            print(f"Помилка: {e}")
+
 
 required_columns = [
     "date", "cloud_cover", "sunshine", "global_radiation",
     "max_temp", "mean_temp", "min_temp", "precipitation",
-    "pressure", "snow_depth" 
+    "pressure", "snow_depth"
 ]
 fetcher = WeatherDataFetcher(required_columns=required_columns, date_column="date", date_format="%Y%m%d")
 df = fetcher._fetch_weather_data(r"D:\weather\src\london_weather.csv")
@@ -182,3 +256,5 @@ if not df.empty:
     print("Дані успішно завантажені!")
     plotter.plot_temperature_with_scales()
     plotter.plot_snow_depth_by_decade()
+    plotter.plot_radiation()
+    plotter.plot_precipitation()
