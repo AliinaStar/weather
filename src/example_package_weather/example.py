@@ -48,9 +48,6 @@ class WeatherDataPlotter:
         self._prepare_data()
 
     def _prepare_data(self):
-        """
-        Готує дані, додаючи колонку 'decade'.
-        """
         try:
             self.data['date'] = pd.to_datetime(self.data['date'], format='%Y%m%d', errors='coerce')
             self.data['decade'] = (self.data['date'].dt.year // 10) * 10
@@ -118,9 +115,6 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
 
     def plot_snow_depth_by_decade(self):
-        """
-        Побудова окремих графіків висоти снігу для кожного десятиліття.
-        """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
