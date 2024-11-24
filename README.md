@@ -5,7 +5,7 @@ A library for visualizing weather conditions that allows you to create graphs of
 ## Installation
 
 ```bash
-pip install weather-visualization
+pip install weather_visualization
 ```
 
 ## Usage
