@@ -18,6 +18,9 @@ dependencies = [
     "matplotlib",
     "seaborn",
     "numpy"
+    "termcolor"
+    "tabulate"
+    "scipy.signal"
 ]
 
 [project.urls]

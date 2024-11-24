@@ -9,22 +9,22 @@ from scipy.signal import savgol_filter
 class WeatherDataFetcher:
     def __init__(self, required_columns: list[str] = None, date_column: str = "date", date_format: str = "%Y%m%d"):
         """
-        Ініціалізує клас DataFetcher.
+        Initializes the DataFetcher class.
 
-        :param required_columns: Список необхідних колонок (може бути None, якщо валідація не потрібна).
-        :param date_column: Назва колонки з датою (якщо є).
-        :param date_format: Формат дати для перевірки (якщо є колонка з датою).
+        :param required_columns: List of required columns (can be None if validation is not needed).
+        :param date_column: Name of the date column (if exists).
+        :param date_format: Date format for validation (if date column exists).
         """
         self.required_columns = required_columns or []
         self.date_column = date_column
         self.date_format = date_format
     def _fetch_weather_data(self, source: str) -> pd.DataFrame:
         """
-               Завантажує дані з файлу та виконує перевірки.
+        Loads data from a file and performs validations.
 
-               :param source: Шлях до CSV-файлу.
-               :return: DataFrame з даними.
-               """
+        :param source: Path to CSV file.
+        :return: DataFrame with data.
+        """
         try:
             data = pd.read_csv(source)
 
@@ -51,6 +51,11 @@ class WeatherDataPlotter:
         self._prepare_data()
 
     def _prepare_data(self):
+        """
+        Prepares data by converting dates to datetime format and calculating decades.
+
+        :return: None
+        """
         try:
             self.data['date'] = pd.to_datetime(self.data['date'], format='%Y%m%d', errors='coerce')
             self.data['decade'] = (self.data['date'].dt.year // 10) * 10
@@ -58,6 +63,15 @@ class WeatherDataPlotter:
             print(f"Помилка під час підготовки даних: {e}")
 
     def plot_temperature_with_scales(self):
+        """
+        Creates a specialized temperature visualization with thermometer-like scales by decades.
+
+        Plots min, mean, and max temperatures as bars with measurement scales and thermometer-style indicators.
+        Handles empty dataset cases and general plotting errors.
+
+        :return: None
+        :raises ValueError: If the dataset is empty
+        """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
@@ -117,7 +131,16 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-    def plot_snow_depth_by_decade(self):
+    def plot_snow_depth(self):
+        """
+        Creates density plots of snow depth distribution for each decade.
+
+        Generates a grid of KDE plots showing snow depth patterns across decades.
+        Handles empty datasets and missing snow depth data.
+
+        :return: None
+        :raises ValueError: If the dataset is empty or snow depth data is missing
+        """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
@@ -166,6 +189,15 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
 
     def plot_radiation(self):
+        """
+        Creates scatter plots with regression lines showing relationship between global radiation and mean temperature by decades.
+
+        Plots temperature vs radiation data points and trend lines for each decade in a grid layout.
+        Handles empty dataset cases.
+
+        :return: None
+        :raises ValueError: If the dataset is empty
+        """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
@@ -210,6 +242,15 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
 
     def plot_precipitation(self):
+        """
+            Visualizes average precipitation by decades using special bar chart with empty frame containers.
+            
+            Creates a bar chart where each decade's precipitation is shown within a standardized frame.
+            Handles empty dataset cases.
+
+            :return: None
+            :raises ValueError: If the dataset is empty
+        """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
@@ -249,9 +290,15 @@ class WeatherDataPlotter:
             print(f"Помилка: {e}")
      
      
-    def cloud_cover(self):
+    def plot_cloud_cover(self):
         """
-        Візуалізує покриття хмарами для кожного десятиліття у вигляді хмарок з точок.
+            Visualizes cloud cover for each decade using dot-based cloud representations.
+            
+            Creates a grid of scatter plots where point sizes represent cloud cover values.
+            Handles empty dataset and missing cloud cover data cases.
+
+            :return: None
+            :raises ValueError: If the dataset is empty or cloud cover data is missing
         """
         try:
             if self.data.empty:
@@ -296,10 +343,15 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-    def sunshine(self):
+    def plot_sunshine(self):
         """
-        Візуалізує кількість сонця для кожного десятиліття у формі сонця.
-        Один промінь = один рік, довжина і колір залежать від кількості сонця.
+        Visualizes sunshine hours for each decade using sun-shaped radial plots.
+        
+        Each year is represented by a ray, where length and color intensity indicate sunshine amount.
+        Creates a grid of visualizations with color scale indicator.
+
+        :return: None
+        :raises ValueError: If the dataset is empty or required columns (decade, sunshine, date) are missing
         """
         try:
             if self.data.empty:
@@ -362,10 +414,16 @@ class WeatherDataPlotter:
         except Exception as e:
             print(f"Помилка: {e}")
 
-    def sunshine_year(self, year):
+    def plot_sunshine_year(self, year):
         """
-        Візуалізує кількість сонця для конкретного року у формі сонця.
-        Один промінь = один день, довжина і колір залежать від кількості сонця.
+        Visualizes sunshine hours for each decade in a sun-shaped pattern.
+        Each ray represents one year, with length and color determined by amount of sunshine.
+
+        Creates radial plots where rays length and color intensity show yearly sunshine values.
+        Handles empty dataset and missing column cases.
+
+        :return: None
+        :raises ValueError: If the dataset is empty or required columns are missing
         """
         try:
             if self.data.empty:
@@ -425,7 +483,13 @@ class WeatherDataPlotter:
 
     def weather_report(self):
         """
-        Створює комплексний текстовий звіт про погоду
+        Generates a comprehensive text-based weather report.
+
+        Creates a formatted report including total records, date range, sunshine hours,
+        temperature metrics, and precipitation data.
+
+        :return: None
+        :raises ValueError: If the dataset is empty
         """
         try:
             if self.data.empty:
@@ -475,7 +539,17 @@ class WeatherDataPlotter:
         except Exception as e:
             print(colored(f"Помилка при створенні звіту: {e}", "red"))
 
-    def pressure_plot(self):
+    def plot_pressure(self):
+        """
+        Plots the average pressure over time for each decade.
+
+        This method groups the dataset by decades and dates, calculates the mean pressure, 
+        and visualizes it in a grid of subplots. Polynomial fitting 
+        is applied for smoothing if sufficient data points are available.
+
+        Raises:
+            ValueError: If the dataset is empty.
+        """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
@@ -527,18 +601,18 @@ class WeatherDataPlotter:
 
 
 
-fetcher = WeatherDataFetcher()
+"""fetcher = WeatherDataFetcher()
 df = fetcher._fetch_weather_data(r"E:\projects\Python\PP\src\london_weather.csv")
 
 if not df.empty:
     plotter = WeatherDataPlotter(df)
     print("Дані успішно завантажені!")
     plotter.plot_temperature_with_scales()
-    plotter.plot_snow_depth_by_decade()
+    plotter.plot_snow_depth()
     plotter.plot_radiation()
     plotter.plot_precipitation()
-    plotter.cloud_cover()
-    plotter.cloud_pressure_plot()
-    plotter.sunshine()
-    plotter.sunshine_year()
-    plotter.weather_report()
+    plotter.plot_cloud_covercloud_cover()
+    plotter.plot_pressure()
+    plotter.plot_sunshine()
+    plotter.plot_sunshine_year()
+    plotter.weather_report()"""
