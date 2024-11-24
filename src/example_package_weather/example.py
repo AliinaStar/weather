@@ -475,7 +475,7 @@ class WeatherDataPlotter:
         except Exception as e:
             print(colored(f"Помилка при створенні звіту: {e}", "red"))
 
-    def cloud_pressure_plot(self):
+    def pressure_plot(self):
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
