@@ -1,4 +1,4 @@
-from .example import WeatherDataFetcher, WeatherDataPlotter
+from .example import WeatherDataPlotter
 
 __version__ = "0.1.0"
-__all__ = ['WeatherDataFetcher', 'WeatherDataPlotter']
+__all__ = ['WeatherDataPlotter']
