@@ -17,8 +17,12 @@ dependencies = [
     "pandas",
     "matplotlib",
     "seaborn",
-    "numpy"
+    "numpy",
+    "termcolor",
+    "tabulate",
+    "scipy"
 ]
+license = { file = "LICENSE" }
 
 [project.urls]
 "Homepage" = "https://github.com/AliinaStar/weather.git"
