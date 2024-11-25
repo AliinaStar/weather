@@ -18,16 +18,16 @@ class WeatherDataPlotter:
         self.data = data.copy()
         self.date_col = date_col
 
-        # Перевірка наявності колонки
+
         if date_col not in self.data.columns:
             raise ValueError(f"Колонка з датами '{date_col}' відсутня у датасеті.")
 
         # Спроба визначити формат дати
         try:
-            # Якщо дати вже у форматі YYYYMMDD
+
             if pd.to_datetime(self.data[date_col], format='%Y%m%d', errors='coerce').notna().all():
                 self.data[date_col] = pd.to_datetime(self.data[date_col], format='%Y%m%d')
-            # Якщо дати у форматі YYYY-MM-DD
+
             elif pd.to_datetime(self.data[date_col], format='%Y-%m-%d', errors='coerce').notna().all():
                 self.data[date_col] = pd.to_datetime(self.data[date_col], format='%Y-%m-%d')
             else:
@@ -35,10 +35,10 @@ class WeatherDataPlotter:
         except Exception as e:
             raise ValueError(f"Помилка під час конвертації дат: {e}")
 
-        # Додавання десятиліття
+
         self.data['decade'] = (self.data[date_col].dt.year // 10) * 10
 
-        # Перетворення дат у формат YYYYMMDD
+
         self.data[date_col] = self.data[date_col].dt.strftime('%Y%m%d')
 
 
@@ -482,7 +482,10 @@ class WeatherDataPlotter:
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
-            
+
+            if isinstance(temp_cols, str):
+                temp_cols = [temp_cols]
+
             if any(col not in self.data.columns for col in [date_col, sunshine_col, precipitation_col] + temp_cols):
                 raise ValueError("Однієї або кількох необхідних колонок немає у датасеті.")
 
@@ -500,7 +503,16 @@ class WeatherDataPlotter:
     
             print(colored(f"\nСередній сонячний світловий день: {avg_sunshine:.2f} годин/день"))
             print(f"Найсонячніший день: {sunniest_day.date()} ({max_sunshine:.2f} годин)\n")
-    
+
+            if len(temp_cols) < 3:
+                raise ValueError("temp_cols має містити щонайменше три елементи: [мін, середнє, макс].")
+
+            if any(col not in self.data.columns for col in [date_col, sunshine_col, precipitation_col] + temp_cols):
+                raise ValueError("Однієї або кількох необхідних колонок немає у датасеті.")
+
+            if len(temp_cols) < 3:
+                raise ValueError("temp_cols має містити щонайменше три елементи: [мін, середнє, макс].")
+
             mean_temp = self.data[temp_cols[1]].mean()
             max_temp = self.data[temp_cols[2]].max()
             min_temp = self.data[temp_cols[0]].min()
@@ -536,26 +548,32 @@ class WeatherDataPlotter:
         """
         Plots the average pressure over time for each decade.
 
-        This method groups the dataset by decades and dates, calculates the mean pressure, 
-        and visualizes it in a grid of subplots. Polynomial fitting 
-        is applied for smoothing if sufficient data points are available.
-
         Raises:
-            ValueError: If the dataset is empty.
+            ValueError: If the dataset is empty or required columns are missing.
         """
         try:
             if self.data.empty:
                 raise ValueError("Датасет порожній.")
-            
-            if any(col not in self.data.columns for col in [pressure_col]):
-                raise ValueError(f"Однієї або обох колонок немає: {pressure_col}")
 
-            grouped_data = self.data.groupby(['decade'])[pressure_col].mean().reset_index()
+
+            if any(col not in self.data.columns for col in [pressure_col, date_col]):
+                raise ValueError(f"Колонки відсутні: {pressure_col}, {date_col}")
+
+
+            if not pd.api.types.is_datetime64_any_dtype(self.data[date_col]):
+                self.data[date_col] = pd.to_datetime(self.data[date_col], format='%Y%m%d', errors='coerce')
+                if self.data[date_col].isna().all():
+                    raise ValueError(f"Некоректні значення у колонці '{date_col}' після конвертації.")
+
+
+            grouped_data = self.data.groupby(['decade', date_col])[pressure_col].mean().reset_index()
             decades = grouped_data['decade'].unique()
             num_decades = len(decades)
 
+
             cols = 3
             rows = (num_decades + cols - 1) // cols
+
 
             fig, axes = plt.subplots(rows, cols, figsize=(15, 5 * rows), constrained_layout=True)
             axes = axes.flatten()
@@ -567,26 +585,24 @@ class WeatherDataPlotter:
                 y_pressure = decade_data[pressure_col].to_numpy()
                 dates = decade_data[date_col]
 
-                ax.plot(
-                    dates,
-                    y_pressure,
-                    color='lightblue',
-                    linewidth=2,
-                )
+
+                ax.plot(dates, y_pressure, color='lightblue', linewidth=2)
+
 
                 if len(y_pressure) > 5:
-                    p = np.polyfit(range(len(dates)), y_pressure, deg=5)
-                    y_poly = np.polyval(p, range(len(dates)))
-                    ax.plot(
-                        dates,
-                        y_poly,
-                        color='blue',
-                    )
+                    x = np.arange(len(dates))
+                    p = np.polyfit(x, y_pressure, deg=5)
+                    y_poly = np.polyval(p, x)
+                    ax.plot(dates, y_poly, color='blue', linestyle='--')
 
                 ax.set_title(f"Середній тиск: {decade}s", fontsize=14)
                 ax.set_xlabel("Дата")
                 ax.set_ylabel("Середній тиск")
                 ax.grid(True, linestyle='--', alpha=0.5)
+
+
+            for j in range(i + 1, len(axes)):
+                axes[j].axis('off')
 
             fig.suptitle("Середній тиск по датах для кожного десятиліття", fontsize=16)
 
@@ -594,5 +610,4 @@ class WeatherDataPlotter:
 
         except Exception as e:
             print(f"Помилка: {e}")
-
 

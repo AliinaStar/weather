@@ -17,7 +17,7 @@ plotter.plot_cloud_cover("cloud_cover")
 plotter.plot_pressure("pressure", "date")
 plotter.plot_sunshine("sunshine","date")
 plotter.plot_sunshine_year(2005, "sunshine", "date")
-plotter.weather_report("date", "sunshine", "mean_temp", "precipitation") 
+plotter.weather_report("date", "sunshine", ["min_temp", "mean_temp", "max_temp"], "precipitation")
 
 '''data1 = pd.read_csv(r"E:\projects\Python\PP\tests\seattle-weather.csv")
 
