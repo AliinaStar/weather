@@ -9,16 +9,16 @@ pip install weather_visualization
 ```
 
 ## Usage
-```
+
 from weather_visualization import WeatherDataPlotter
 
-# Loading data
+### Loading data
 data = pd.read_csv(r"E:\projects\Python\PP\src\london_weather.csv")
 
-# Creating visualizations
+### Creating visualizations
 plotter = WeatherDataPlotter(data, 'date')
 
-# Available visualizations
+### Available visualizations
 plotter.plot_temperature_with_scales("min_temp", "mean_temp", "max_temp")    # Temperature    
 plotter.plot_snow_depth("snow_depth")                                        # Snow cover
 plotter.plot_radiation("global_radiation", "mean_temp")                      # Solar radiation
@@ -28,4 +28,4 @@ plotter.plot_pressure("pressure", "date")                                    # P
 plotter.plot_sunshine("sunshine","date")                                     # Sunshine during decade
 plotter.plot_sunshine_year(2005, "sunshine", "date")                         # Sunshine during year
 plotter.weather_report("date", "sunshine", "mean_temp", "precipitation")     # General report about sunny days, prepitiation and temperatute
-```
+
